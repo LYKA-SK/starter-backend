@@ -3,7 +3,7 @@ const httpError = require('../utils/httpError');
 
 async function placeOrder(customerId, productId, quantity) {
   if (!Number.isInteger(quantity) || quantity <= 0) {
-    throw httpError(400, 'Quantity must be a whole number greater than 0');
+    throw httpError(400, 'quantity must be a whole number greater than 0');
   }
 
   const customer = await prisma.customer.findUnique({ where: { id: customerId } });
@@ -17,7 +17,7 @@ async function placeOrder(customerId, productId, quantity) {
   }
 
   if (product.stock < quantity) {
-    throw httpError(409, 'Not enough stock');
+    throw httpError(409, 'Not enough stock available');
   }
 
   const totalPrice = quantity * product.price;
@@ -41,17 +41,13 @@ async function placeOrder(customerId, productId, quantity) {
 }
 
 async function cancelOrder(orderId) {
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    include: { product: true },
-  });
-
+  const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) {
     throw httpError(404, 'Order not found');
   }
 
   if (order.status !== 'PENDING') {
-    throw httpError(409, 'Only PENDING orders can be cancelled');
+    throw httpError(409, 'Only pending orders can be cancelled');
   }
 
   const [updatedOrder] = await prisma.$transaction([
