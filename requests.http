@@ -1,0 +1,78 @@
+### Use with the "REST Client" extension in VS Code.
+### The server must be running: npm run dev
+### Reset data anytime with: npm run seed
+
+@base = http://localhost:3000/api
+
+### ---------- S6.1 — List products (10 pts) ----------
+
+### All products (expect 5 products)
+GET {{base}}/products
+
+### Search filter (expect 1 product: "Jasmine Rice 5kg")
+GET {{base}}/products?search=rice
+
+### ---------- S6.2 — Customer with orders (10 pts) ----------
+
+### Customer 2 with orders (expect Chan Mealea with 2 orders)
+GET {{base}}/customers/2
+
+### Unknown customer (expect 404)
+GET {{base}}/customers/999
+
+### ---------- S6.3 — Sales report, raw SQL (15 pts) ----------
+
+### Expect on fresh seed (CANCELLED orders not counted):
+### Instant Noodles Box = 15 sold / $15,
+### Jasmine Rice 5kg = 2 / $16, Cooking Oil 1L = 1 / $4,
+### Coca-Cola 6-Pack = 0 / $0 (its only order is CANCELLED),
+### Palm Sugar 1kg = 0 / $0
+GET {{base}}/reports/product-sales
+
+### ---------- S7.1 — Place an order (25 pts) ----------
+
+### Happy path (expect 201, status PENDING, totalPrice 2 x $6 = $12,
+### then GET /products shows product 3 stock 30 -> 28)
+POST {{base}}/orders
+Content-Type: application/json
+
+{ "customerId": 3, "productId": 3, "quantity": 2 }
+
+### Quantity zero (expect 400)
+POST {{base}}/orders
+Content-Type: application/json
+
+{ "customerId": 1, "productId": 1, "quantity": 0 }
+
+### Not enough stock: product 5 has 0 (expect 409)
+POST {{base}}/orders
+Content-Type: application/json
+
+{ "customerId": 1, "productId": 5, "quantity": 1 }
+
+### Unknown customer (expect 404)
+POST {{base}}/orders
+Content-Type: application/json
+
+{ "customerId": 999, "productId": 1, "quantity": 1 }
+
+### Unknown product (expect 404)
+POST {{base}}/orders
+Content-Type: application/json
+
+{ "customerId": 1, "productId": 999, "quantity": 1 }
+
+### ---------- S7.2 — Cancel an order (10 pts) ----------
+
+### Happy path: order 2 is PENDING, quantity 5 (expect 200,
+### status CANCELLED, then GET /products shows product 1 stock 50 -> 55)
+PUT {{base}}/orders/2/cancel
+
+### Cancel the same order again (expect 409)
+PUT {{base}}/orders/2/cancel
+
+### Order 1 is PAID — cannot cancel (expect 409)
+PUT {{base}}/orders/1/cancel
+
+### Unknown order (expect 404)
+PUT {{base}}/orders/999/cancel

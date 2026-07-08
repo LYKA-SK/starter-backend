@@ -1,0 +1,48 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note: your editor may warn that `url` is "no longer supported" —
+// that warning comes from a newer Prisma VS Code extension and only
+// applies to Prisma 7. This project uses Prisma 6, where this is
+// correct. Ignore the warning; `npx prisma validate` confirms it.
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  phone     String?
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  price     Int
+  stock     Int
+  createdAt DateTime @default(now())
+  orders    Order[]
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CANCELLED
+}
+
+model Order {
+  id         Int          @id @default(autoincrement())
+  customerId Int
+  productId  Int
+  quantity   Int
+  totalPrice Int
+  status     OrderStatus  @default(PENDING)
+  orderDate  DateTime     @default(now())
+  customer   Customer     @relation(fields: [customerId], references: [id])
+  product    Product      @relation(fields: [productId], references: [id])
+}
